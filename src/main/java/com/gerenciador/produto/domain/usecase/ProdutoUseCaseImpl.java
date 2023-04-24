@@ -39,11 +39,7 @@ public class ProdutoUseCaseImpl implements ProdutoUseCase {
 
     @Override
     public Produto buscarProdutoPorId(UUID id) {
-        Produto produto = produtoRepository.buscarPorId(id);
-        if (produto == null) {
-            throw new ProdutoNotFoundException("Produto com id " + id + " não encontrado.");
-        }
-        return produtoMapper.fromProduto(produto);
+        return rodutoRepository.buscarPorId(id);
     }
 
     @Override
