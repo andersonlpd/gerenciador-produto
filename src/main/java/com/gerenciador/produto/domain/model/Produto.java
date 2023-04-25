@@ -9,7 +9,7 @@ public class Produto {
     private Double preco;
     private String categoria;
 
-    public Produto() {
+    public Produto(UUID id, String nome, Double preco, String categoria) {
         this.id = UUID.randomUUID();
     }
 

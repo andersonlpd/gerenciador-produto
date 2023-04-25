@@ -10,6 +10,7 @@ import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.ResultSet;
 import com.datastax.oss.driver.api.core.cql.Row;
 import com.datastax.oss.driver.api.core.cql.SimpleStatement;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.inject.Singleton;
 
@@ -27,6 +28,7 @@ public class ProdutoRepositoryImpl implements ProdutoRepository {
     private static final String INSERT_QUERY = "INSERT INTO produtos (id, name, price, category) VALUES (?, ?, ?, ?)";
     private static final String UPDATE_QUERY = "UPDATE produtos SET name = ?, price = ?, category = ? WHERE id = ?";
     private static final String DELETE_QUERY = "DELETE FROM produtos WHERE id = ?";
+    private static final String redisTTL = "60";
 
     private final CqlSession session;
     private final RedisAPI redisAPI;
@@ -45,10 +47,13 @@ public class ProdutoRepositoryImpl implements ProdutoRepository {
                     if (Produtos == null) {
                         ResultSet rs = session.execute(SELECT_ALL_QUERY);
                         List<Produto> mappedProdutos = ProdutoMapper.map(rs);
-                        return redisAPI.setex(key, 60, mappedProdutos)
+                        ObjectMapper ObjMapper = new ObjectMapper();
+                        String mappedProdutosJson = ObjMapper.writeValueAsString(mappedProdutos);
+                        return redisAPI.setex(key, redisTTL, mappedProdutosJson)
                                 .map(ignore -> mappedProdutos);
                     } else {
-                        return Uni.createFrom().item(Optional.of(Produtos).map(ProdutoMapper::map).get());
+                        return Uni.createFrom().item(Optional.of(Produtos).map(p -> ProdutoMapper.fromString(p)).get());
+
                     }
                 })
                 .await().indefinitely();
